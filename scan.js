@@ -20,9 +20,12 @@
         if (res.ok) {
             const d = await res.json();
             if (d?.new_scan) {
-                // Stop and restart clock to update immediately with the new count
-                clearInterval(timerInterval); 
-                await fetchTotalScans(true); // Fetch new count AND restart the clock
+                
+                // --- FINAL FIX: DIRECT LOCAL UPDATE ---
+                totalScans += 1; // Manually increment the local count
+                clearInterval(timerInterval); // Stop the old clock
+                update(); // Initial update with the new count
+                timerInterval = setInterval(update, 50); // Restart the clock instantly
                 
                 // UI Feedback
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
@@ -41,9 +44,8 @@
     }
 
     async function fetchTotalScans(startTimer = true) {
-        // --- FINAL FIX: ADD CACHE BUSTER TO FORCE FRESH DATA ---
-        const cacheBuster = Date.now();
-        const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${cacheBuster}`; 
+        // Only fetching once on load, so cache-buster is less critical here but left for safety.
+        const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${Date.now()}`; 
 
         const res = await fetch(url, {
             headers: { 'apikey': API_KEY }
