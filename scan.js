@@ -43,31 +43,34 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡ \n\n ' + totalScans + '/2,000 humans ready \n https://hydrbrew.com')}`, '_blank');
     }
 
-       // --- Core Functions: READ Operation (Initial Count Fetch) ---
-    async function fetchInitialCount() {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_total_scans`, {
-            method: 'POST',
-            headers: {
-                'apikey': API_KEY,
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`, 
-                'Origin': window.location.origin
-            }
-        });
-
-if (res.ok) {
-            const d = await res.json();
-            
-            // CRITICAL FIX: Direct assignment since the function now returns a raw bigint
-            if (typeof d === 'number') {
-                totalScans = d;
-            } else if (d && d.length > 0 && d[0].value) { 
-                // Fallback for array response (if needed)
-                totalScans = parseInt(d[0].value, 10);
-            } else {
-                 console.error("Fetch returned unreadable data:", d);
-            }
+      // --- Core Functions: READ Operation (Initial Count Fetch) ---
+async function fetchInitialCount() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_total_scans`, {
+        method: 'POST',
+        headers: {
+            'apikey': API_KEY,
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`, 
+            'Origin': window.location.origin
         }
+    });
+
+    if (res.ok) {
+        // Revert to res.json(), which keeps the async promise structure correct
+        const d = await res.json();
+        
+        // Final attempt to read the number, treating the response as a simple number
+        if (typeof d === 'number') {
+            totalScans = d;
+        } else {
+             // If it's not a number, the value will remain 0, but the clock will run
+             console.error("Fetch returned non-number data, keeping totalScans=0:", d);
+        }
+        
+    } else {
+        console.error("Failed to fetch initial scan count with status:", res.status);
+    }
+}
     
     // --- Core Functions: WRITE Operation (Scan Registration) ---
     window.registerScan = async function (id) {
