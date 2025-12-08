@@ -41,3 +41,38 @@ window.registerScan = async function (id) {
         document.getElementById('status').innerHTML = 'Error registering scan.';
     }
 }
+// --- NEW FUNCTION: Fetch the initial scan count from Supabase ---
+async function fetchInitialCount() {
+    const originHeader = { 'Origin': window.location.origin };
+    const authHeader = { 'Authorization': `Bearer ${API_KEY}` };
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_total_scans`, {
+        method: 'POST',
+        headers: {
+            'apikey': API_KEY,
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`,
+            'Origin': window.location.origin
+        }
+    });
+
+    if (res.ok) {
+        const d = await res.json();
+        
+        // CRITICAL FIX: Robustly read the array response from PostgreSQL
+        if (d && d.length > 0) {
+            const rawValue = d[0].get_total_scans; 
+
+            if (typeof rawValue === 'string') {
+                totalScans = parseInt(rawValue, 10);
+            } else if (typeof rawValue === 'number') {
+                totalScans = rawValue;
+            } else {
+                 console.error("Fetched value is not a string or number:", rawValue);
+            }
+        }
+        
+    } else {
+        console.error("Failed to fetch initial scan count with status:", res.status);
+    }
+}
