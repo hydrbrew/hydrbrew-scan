@@ -1,41 +1,19 @@
-(function() {
-    let hasScanned = false;
-    
-    const SUPABASE_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
-    const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
+// 1. Timer Update Loop (CORRECTED LOGIC)
+    function update() {
+        const acceleration_delay = totalScans * 7.3 * 1000; // 7.3 seconds acceleration per scan
 
-    // --- SUPABASE SCAN REGISTRATION ---
-    window.registerScan = async function(id) {
-        console.log("Attempting to send scan for ID:", id);
+        // Subtract the acceleration_delay from the INITIAL timestamp
+        const diff = INITIAL - acceleration_delay - Date.now(); 
         
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
-            method:'POST',
-            headers:{'apikey': API_KEY, 'Content-Type':'application/json'},
-            body: JSON.stringify({p_can_id:id})
-        });
-        
-        if (res.ok) {
-            console.log("Fetch successful. Status 200."); 
+        if (diff > 0) {
+            const days = Math.floor(diff / 864e5);
+            // Format time difference to H:M:S:ms
+            const timePart = new Date(diff).toISOString().substr(11, 12); 
+            document.getElementById('timer').textContent = `${days}d ${timePart}`;
         } else {
-            console.error("Fetch failed with status:", res.status); 
+            document.getElementById('timer').textContent = "AGI IS HERE";
         }
+        document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
+        
+        requestAnimationFrame(update);
     }
-
-    // --- FRAGMENT-BASED SCAN CHECK ---
-    window.checkForCan = function() {
-        const fullHash = location.hash; 
-        if (fullHash.startsWith('#can-')) {
-            const canId = fullHash.substring(5); 
-            if (canId.length === 12 && !hasScanned) {
-                hasScanned = true;
-                console.log('Valid can ID found, registering scan...');
-                window.registerScan(canId); 
-                history.replaceState(null, null, ' ');
-            }
-        }
-    }
-
-    // --- Run Check on Load ---
-    console.log("External script loaded.");
-    window.checkForCan();
-})();
