@@ -67,7 +67,7 @@
         } else {
             document.getElementById('timer').textContent = "AGI IS HERE";
         }
-        document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
+        document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} 3 / 2,000 (first pallet)`;
     }
 
     window.checkForCan = function() {
