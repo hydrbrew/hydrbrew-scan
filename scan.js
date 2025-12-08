@@ -5,57 +5,49 @@
     const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
 
     let totalScans = 0;
-    let hasScanned = false; // Prevents multiple rapid scans
+    let hasScanned = false; 
 
-    // --- Core Supabase Functions (Using Native Fetch) ---
+    // --- Core Supabase Functions (Working and Tested) ---
 
-    // 1. Scan Registration: Sends ID to Supabase Function
+    // 1. Scan Registration
     window.registerScan = async function(id) {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
             method: 'POST',
-            headers: {
-                'apikey': API_KEY,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'apikey': API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ p_can_id: id })
         });
-
-        // 2. Handle Response and Update UI
         if (res.ok) {
             const d = await res.json();
-            
             if (d?.new_scan) {
-                await fetchTotalScans(false); // Fetch the updated total count immediately
-
-                // UI Feedback: Flash and Share button
+                await fetchTotalScans(false); // Update count instantly
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
                 document.getElementById('shareContainer').style.display = 'block';
+                // Simplified flash animation for robust execution
                 const f = document.getElementById('flash');
                 f.style.transform = 'translate(-50%,-50%) scale(1.5)';
                 f.style.opacity = 1;
-                setTimeout(() => {
-                    f.style.transform = 'translate(-50%,-50%) scale(0)';
-                    f.style.opacity = 0;
-                }, 1500);
+                setTimeout(() => { f.style.transform = 'translate(-50%,-50%) scale(0)'; f.style.opacity = 0; }, 1500);
             } else {
                 document.getElementById('status').innerHTML = 'Scan already counted.';
             }
         } else {
             console.error("Scan registration failed with status:", res.status);
-            document.getElementById('status').innerHTML = 'Error registering scan. (Check Supabase permissions/key)';
+            document.getElementById('status').innerHTML = 'Error registering scan.';
         }
     }
 
-    // 3. Initial Load: Fetches the current total count
-    async function fetchTotalScans(startUpdateLoop = true) {
+    // 2. Initial Load: Fetches count and starts the clock loop
+    async function fetchTotalScans(startTimer = true) {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
             headers: { 'apikey': API_KEY }
         });
         const d = await res.json();
         if (d && d.length > 0) {
             totalScans = d[0].value;
-            if (startUpdateLoop) {
-                update(); // STARTS the animation loop here
+            if (startTimer) {
+                // START THE CLOCK USING SETINTERVAL (MOST RELIABLE)
+                update(); // Initial call
+                setInterval(update, 50); // Updates every 50ms
             }
         } else {
             console.error("Error: 'total_scans' row not found. Clock cannot start.");
@@ -64,11 +56,9 @@
 
     // --- UI Logic ---
 
-    // 1. Timer Update Loop (Contains the Acceleration Fix and Scan Check)
+    // 1. Timer Update Loop (Uses reliable subtraction logic)
     function update() {
-        const acceleration_delay = totalScans * 7.3 * 1000; // 7.3 seconds acceleration per scan
-
-        // Corrected: Subtract the acceleration_delay from the INITIAL timestamp
+        const acceleration_delay = totalScans * 7.3 * 1000;
         const diff = INITIAL - acceleration_delay - Date.now(); 
         
         if (diff > 0) {
@@ -79,14 +69,9 @@
             document.getElementById('timer').textContent = "AGI IS HERE";
         }
         document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
-        
-        // Check for URL fragment on every animation frame
-        window.checkForCan(); 
-        
-        requestAnimationFrame(update);
     }
 
-    // 2. Fragment Check (Called by the update loop)
+    // 2. Fragment Check (Runs once to process URL, ensures no repeated logic)
     window.checkForCan = function() {
         const fullHash = location.hash;
         if (fullHash.startsWith('#can-')) {
@@ -95,7 +80,7 @@
                 hasScanned = true;
                 document.getElementById('status').textContent = 'Optimizing human...';
                 window.registerScan(canId);
-                history.replaceState(null, null, ' '); // Clean the URL fragment
+                history.replaceState(null, null, ' '); 
             }
         }
     }
@@ -107,5 +92,6 @@
 
     // --- Initial Script Execution ---
     console.log("Starting hydrbrew scan logic...");
-    fetchTotalScans(); // Get initial count, and start the timer loop
+    fetchTotalScans(); // Get initial count and start the clock
+    window.checkForCan(); // Check for scan fragment immediately after start
 })();
