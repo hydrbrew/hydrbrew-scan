@@ -6,8 +6,9 @@
 
     let totalScans = 0;
     let hasScanned = false; 
+    let timerInterval; // Holder for the clock interval
 
-    // --- Core Supabase Functions (Working and Tested) ---
+    // --- Core Functions ---
 
     window.registerScan = async function(id) {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
@@ -18,11 +19,11 @@
         if (res.ok) {
             const d = await res.json();
             if (d?.new_scan) {
-                await fetchTotalScans(false); 
+                // Stop and restart clock to update immediately
+                clearInterval(timerInterval); 
+                await fetchTotalScans(true); // Fetch new count AND restart the clock
                 
-                // --- CRITICAL FIX: FORCING THE UI UPDATE ---
-                update(); 
-                
+                // UI Feedback
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
                 document.getElementById('shareContainer').style.display = 'block';
                 const f = document.getElementById('flash');
@@ -47,7 +48,7 @@
             totalScans = d[0].value;
             if (startTimer) {
                 update(); 
-                setInterval(update, 50); 
+                timerInterval = setInterval(update, 50); // Use the global interval holder
             }
         } else {
             console.error("Error: 'total_scans' row not found. Clock cannot start.");
@@ -86,8 +87,13 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initial Script Execution (Clean and Stable) ---
-    console.log("Starting hydrbrew scan logic...");
-    fetchTotalScans();
-    window.checkForCan(); 
+    // --- Initialization ---
+    function init() {
+        console.log("Initialization complete. Starting hydrbrew logic...");
+        fetchTotalScans();
+        window.checkForCan();
+    }
+    
+    // Use the most stable initialization method: direct call.
+    init(); 
 })();
