@@ -4,14 +4,11 @@
     const SUPABASE_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
     const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
 
-    let totalScans = 3;
+    let totalScans = 0;
     let hasScanned = false; 
-    let timerInterval; 
+    let timerInterval; // Holder for the clock interval
 
-    // --- Core Functions (Stable and Tested) ---
-// ... (The rest of the file continues from here) 
-
-    // --- Core Functions (Stable and Tested) ---
+    // --- Core Functions ---
 
     window.registerScan = async function(id) {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
@@ -19,17 +16,13 @@
             headers: { 'apikey': API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ p_can_id: id })
         });
-        
         if (res.ok) {
             const d = await res.json();
             if (d?.new_scan) {
+                // Stop and restart clock to update immediately
+                clearInterval(timerInterval); 
+                await fetchTotalScans(true); // Fetch new count AND restart the clock
                 
-                // FIX: Instant UI Update (local change)
-                totalScans += 1;
-                clearInterval(timerInterval);
-                update();
-                timerInterval = setInterval(update, 50);
-
                 // UI Feedback
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
                 document.getElementById('shareContainer').style.display = 'block';
@@ -46,18 +39,17 @@
         }
     }
 
-    async function fetchTotalScans() {
-        const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${Date.now()}`; 
-
-        const res = await fetch(url, {
+    async function fetchTotalScans(startTimer = true) {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
             headers: { 'apikey': API_KEY }
         });
-        
         const d = await res.json();
         if (d && d.length > 0) {
             totalScans = d[0].value;
-            update(); 
-            timerInterval = setInterval(update, 50); 
+            if (startTimer) {
+                update(); 
+                timerInterval = setInterval(update, 50); // Use the global interval holder
+            }
         } else {
             console.error("Error: 'total_scans' row not found. Clock cannot start.");
         }
@@ -78,7 +70,6 @@
         document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
     }
 
-    // --- Fragment Check Logic (Called after clock starts) ---
     window.checkForCan = function() {
         const fullHash = location.hash;
         if (fullHash.startsWith('#can-')) {
@@ -96,22 +87,13 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initialization: The Ultimate Failsafe Polling Loop ---
-    let initAttempts = 0;
-    const maxAttempts = 200; // Try for 10 seconds (200 * 50ms)
-    const pollingInterval = setInterval(() => {
-        initAttempts++;
-        const timerElement = document.getElementById('timer');
-        
-        // Check if the HTML element is finally available
-        if (timerElement) {
-            clearInterval(pollingInterval); // Stop the failsafe loop
-            console.log("Failsafe activated. Starting hydrbrew logic...");
-            fetchTotalScans();
-            window.checkForCan();
-        } else if (initAttempts >= maxAttempts) {
-            clearInterval(pollingInterval);
-            console.error("Initialization failed: Could not find 'timer' element after 10 seconds.");
-        }
-    }, 50); // Check every 50 milliseconds
+    // --- Initialization ---
+    function init() {
+        console.log("Initialization complete. Starting hydrbrew logic...");
+        fetchTotalScans();
+        window.checkForCan();
+    }
+    
+    // Use the most stable initialization method: direct call.
+    init(); 
 })();
