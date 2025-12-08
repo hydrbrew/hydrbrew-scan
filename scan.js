@@ -48,7 +48,7 @@
             // Read the raw text and parse the number (Fix for bigint return type)
             const rawText = await res.text();
             const parsedCount = parseInt(rawText.trim(), 10); 
-
+            
             if (!isNaN(parsedCount) && parsedCount >= 0) {
                 totalScans = parsedCount;
             } else {
@@ -75,10 +75,10 @@
 
         if (res.ok) {
             const d = await res.json();
-
+            
             // 2. Check the RPC result for new_scan: true
             if (d && d.length > 0 && d[0].new_scan === true) {
-
+                
                 // 3. CRITICAL: Directly PATCH the globals table to increment the counter
                 const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
                     method: 'PATCH',
@@ -91,7 +91,7 @@
                     },
                     body: JSON.stringify({ value: totalScans + 1 })
                 });
-
+                
                 if (patchRes.ok) {
                     // 4. Update the local counter and UI
                     totalScans += 1;
@@ -131,7 +131,7 @@
         }
     }
     window.checkForCan = checkForCan;
-
+    
     // --- Initialization (Final Call) ---
     async function init() {
         await fetchInitialCount(); 
