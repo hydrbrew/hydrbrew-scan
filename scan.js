@@ -78,10 +78,11 @@ window.registerScan = async function (id) {
             await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
                 method: 'PATCH',
                headers: {
+ headers: {
     'apikey': API_KEY,
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${API_KEY}`,
-    'Prefer': 'return=representation' // Guaranteed stable header
+    'Prefer': 'return=minimal' // This is the old header
 },
             
             // Update the local counter and UI
