@@ -6,7 +6,7 @@
 
     let totalScans = 0;
     let hasScanned = false; 
-    let timerInterval; // Holder for the clock interval
+    let timerInterval; 
 
     // --- Core Functions ---
 
@@ -21,12 +21,12 @@
             const d = await res.json();
             if (d?.new_scan) {
                 
-                // --- FINAL FIX: DIRECT LOCAL UPDATE ---
+                // CRITICAL FIX: Direct local update and immediate redraw
                 totalScans += 1; // Manually increment the local count
                 clearInterval(timerInterval); // Stop the old clock
                 update(); // Initial update with the new count
                 timerInterval = setInterval(update, 50); // Restart the clock instantly
-                
+
                 // UI Feedback
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
                 document.getElementById('shareContainer').style.display = 'block';
@@ -44,7 +44,8 @@
     }
 
     async function fetchTotalScans(startTimer = true) {
-        // Only fetching once on load, so cache-buster is less critical here but left for safety.
+        // --- FINAL FIX: ADD CACHE BUSTER FOR INITIAL LOAD ---
+        // This is only strictly needed for the initial load now.
         const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${Date.now()}`; 
 
         const res = await fetch(url, {
