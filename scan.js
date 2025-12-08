@@ -22,10 +22,10 @@
             if (d?.new_scan) {
                 
                 // CRITICAL FIX: Direct local update and immediate redraw
-                totalScans += 1; // Manually increment the local count
-                clearInterval(timerInterval); // Stop the old clock
-                update(); // Initial update with the new count
-                timerInterval = setInterval(update, 50); // Restart the clock instantly
+                totalScans += 1;
+                clearInterval(timerInterval);
+                update();
+                timerInterval = setInterval(update, 50);
 
                 // UI Feedback
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
@@ -44,8 +44,6 @@
     }
 
     async function fetchTotalScans(startTimer = true) {
-        // --- FINAL FIX: ADD CACHE BUSTER FOR INITIAL LOAD ---
-        // This is only strictly needed for the initial load now.
         const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${Date.now()}`; 
 
         const res = await fetch(url, {
@@ -103,5 +101,6 @@
         window.checkForCan();
     }
     
-    init(); 
+    // --- GUARANTEED START VIA window.onload ---
+    window.onload = init;
 })();
