@@ -21,7 +21,7 @@
             const d = await res.json();
             if (d?.new_scan) {
                 
-                // CRITICAL FIX: Direct local update and immediate redraw
+                // FIX: Instant UI Update (Manually increment count and restart clock)
                 totalScans += 1;
                 clearInterval(timerInterval);
                 update();
@@ -43,7 +43,7 @@
         }
     }
 
-    async function fetchTotalScans(startTimer = true) {
+    async function fetchTotalScans() {
         // Cache buster for initial load
         const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${Date.now()}`; 
 
@@ -54,10 +54,9 @@
         const d = await res.json();
         if (d && d.length > 0) {
             totalScans = d[0].value;
-            if (startTimer) {
-                update(); 
-                timerInterval = setInterval(update, 50); 
-            }
+            // Start the clock after getting the initial count
+            update(); 
+            timerInterval = setInterval(update, 50); 
         } else {
             console.error("Error: 'total_scans' row not found. Clock cannot start.");
         }
@@ -78,7 +77,8 @@
         document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
     }
 
-    window.checkForCan = function() {
+    // --- Fragment Check Logic (for mobile) ---
+    function processCanFragment() {
         const fullHash = location.hash;
         if (fullHash.startsWith('#can-')) {
             const canId = fullHash.substring(5);
@@ -95,10 +95,10 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initialization: Simplest possible direct call ---
+    // --- Initialization: Direct Call for stability and instant mobile scan ---
     console.log("Starting hydrbrew logic...");
-    fetchTotalScans();
-    window.checkForCan();
-    
+    fetchTotalScans(); // Starts the clock
+    processCanFragment(); // Checks for the URL fragment immediately
+
 })();
 
