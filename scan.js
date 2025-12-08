@@ -4,7 +4,7 @@
     const SUPABASE_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
     const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
 
-    let totalScans = 0;
+    let totalScans = 3;
     let hasScanned = false; 
     let timerInterval; 
 
