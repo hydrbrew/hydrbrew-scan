@@ -2,7 +2,7 @@
     // --- Configuration ---
     const INITIAL = new Date('2030-07-11T14:22:00.000Z').getTime();
     const SUPABASE_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
-    const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImexCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
+    const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
 
     let totalScans = 0;
     let hasScanned = false; 
@@ -75,7 +75,7 @@
         document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
     }
 
-    // --- Fragment Check Logic (We are reverting this back to a window function) ---
+    // --- Fragment Check Logic ---
     window.checkForCan = function() {
         const fullHash = location.hash;
         if (fullHash.startsWith('#can-')) {
@@ -93,12 +93,12 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initialization: Reverting to the most stable start sequence ---
+    // --- Initialization: Last known stable start sequence ---
     function init() {
         console.log("Initialization complete. Starting hydrbrew logic...");
         fetchTotalScans();
         window.checkForCan();
     }
     
-    init(); // Simplest stable call to start the script
+    init();
 })();
