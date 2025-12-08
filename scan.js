@@ -78,13 +78,11 @@ window.registerScan = async function (id) {
             await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
                 method: 'PATCH',
                 headers: {
-                    'apikey': API_KEY,
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${API_KEY}`,
-                    'Prefer': 'return=minimal' // Optimizes performance
-                },
-                body: JSON.stringify({ value: totalScans + 1 }) // Increment by 1
-            });
+    'apikey': API_KEY,
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${API_KEY}`,
+    'Prefer': 'return=representation' // CRITICAL: Forces the database to fully process the update
+},
             
             // Update the local counter and UI
             totalScans += 1;
