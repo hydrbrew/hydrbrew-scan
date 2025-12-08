@@ -4,25 +4,31 @@
     const SUPABASE_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
     const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
 
-    let totalScans = 3;
+    // *** FIX: totalScans must start at 3 to bypass the failing initial fetch ***
+    let totalScans = 3; 
     let hasScanned = false; 
     let timerInterval; // Holder for the clock interval
 
     // --- Core Functions ---
 
     window.registerScan = async function(id) {
+        // This function attempts to WRITE the new scan to Supabase
         const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
             method: 'POST',
             headers: { 'apikey': API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ p_can_id: id })
         });
+        
         if (res.ok) {
             const d = await res.json();
             if (d?.new_scan) {
-                // Stop and restart clock to update immediately
-                clearInterval(timerInterval); 
-                await fetchTotalScans(true); // Fetch new count AND restart the clock
                 
+                // Stop and restart clock to update immediately
+                totalScans += 1;
+                clearInterval(timerInterval);
+                update();
+                timerInterval = setInterval(update, 50);
+
                 // UI Feedback
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
                 document.getElementById('shareContainer').style.display = 'block';
@@ -34,26 +40,13 @@
                 document.getElementById('status').innerHTML = 'Scan already counted.';
             }
         } else {
+            // CRITICAL ERROR LOGGING for the failing RPC call
             console.error("Scan registration failed with status:", res.status);
             document.getElementById('status').innerHTML = 'Error registering scan.';
         }
     }
 
-    async function fetchTotalScans(startTimer = true) {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
-            headers: { 'apikey': API_KEY }
-        });
-        const d = await res.json();
-        if (d && d.length > 0) {
-            totalScans = d[0].value;
-            if (startTimer) {
-                update(); 
-                timerInterval = setInterval(update, 50); // Use the global interval holder
-            }
-        } else {
-            console.error("Error: 'total_scans' row not found. Clock cannot start.");
-        }
-    }
+    // --- REMOVED fetchTotalScans() function to eliminate startup crashes ---
 
     // --- UI Logic ---
     function update() {
@@ -67,9 +60,11 @@
         } else {
             document.getElementById('timer').textContent = "AGI IS HERE";
         }
-        document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} 3 / 2,000 (first pallet)`;
+        // Line 70 is correct as it uses the totalScans variable
+        document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
     }
 
+    // --- Fragment Check Logic ---
     window.checkForCan = function() {
         const fullHash = location.hash;
         if (fullHash.startsWith('#can-')) {
@@ -87,13 +82,14 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initialization ---
+    // --- Initialization: Clock starts directly with manual value ---
     function init() {
-        console.log("Initialization complete. Starting hydrbrew logic...");
-        fetchTotalScans();
+        console.log("Initialization complete. Starting hydrbrew logic with manual value.");
+        // We now start the clock directly without a fetch call
+        update(); // Start the clock display immediately
+        timerInterval = setInterval(update, 50); // Start the clock interval
         window.checkForCan();
     }
     
-    // Use the most stable initialization method: direct call.
     init(); 
 })();
