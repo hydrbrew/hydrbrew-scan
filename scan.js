@@ -16,10 +16,11 @@
             headers: { 'apikey': API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ p_can_id: id })
         });
+        
         if (res.ok) {
             const d = await res.json();
             if (d?.new_scan) {
-                // Stop and restart clock to update immediately
+                // Stop and restart clock to update immediately with the new count
                 clearInterval(timerInterval); 
                 await fetchTotalScans(true); // Fetch new count AND restart the clock
                 
@@ -40,15 +41,20 @@
     }
 
     async function fetchTotalScans(startTimer = true) {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
+        // --- FINAL FIX: ADD CACHE BUSTER TO FORCE FRESH DATA ---
+        const cacheBuster = Date.now();
+        const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${cacheBuster}`; 
+
+        const res = await fetch(url, {
             headers: { 'apikey': API_KEY }
         });
+        
         const d = await res.json();
         if (d && d.length > 0) {
             totalScans = d[0].value;
             if (startTimer) {
                 update(); 
-                timerInterval = setInterval(update, 50); // Use the global interval holder
+                timerInterval = setInterval(update, 50); 
             }
         } else {
             console.error("Error: 'total_scans' row not found. Clock cannot start.");
@@ -94,6 +100,5 @@
         window.checkForCan();
     }
     
-    // Use the most stable initialization method: direct call.
     init(); 
 })();
