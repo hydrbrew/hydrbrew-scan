@@ -51,16 +51,21 @@
         }
     }
 
-    // --- NEW FUNCTION: Fetch the initial scan count from Supabase ---
-    async function fetchInitialCount() {
-        // We use the 'rpc' endpoint to call the stored function
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_total_scans`, {
-            method: 'POST',
-            headers: {
-                'apikey': API_KEY,
-                'Content-Type': 'application/json'
-            }
-        });
+// --- NEW FUNCTION: Fetch the initial scan count from Supabase ---
+async function fetchInitialCount() {
+    // This line sends the required Origin header
+    const originHeader = { 'Origin': window.location.origin };
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_total_scans`, {
+        method: 'POST',
+        headers: {
+            'apikey': API_KEY,
+            'Content-Type': 'application/json',
+            // --- ADD THE ORIGIN HEADER HERE ---
+            ...originHeader 
+        }
+    });
+    // ... rest of the function remains the same ...
 
         if (res.ok) {
             const d = await res.json();
