@@ -6,7 +6,7 @@
 
     let totalScans = 0;
     let hasScanned = false; 
-    let timerInterval; // Holder for the clock interval
+    let timerInterval; 
 
     // --- Core Functions ---
 
@@ -16,13 +16,17 @@
             headers: { 'apikey': API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ p_can_id: id })
         });
+        
         if (res.ok) {
             const d = await res.json();
             if (d?.new_scan) {
-                // Stop and restart clock to update immediately
-                clearInterval(timerInterval); 
-                await fetchTotalScans(true); // Fetch new count AND restart the clock
                 
+                // CRITICAL FIX: Direct local update and immediate redraw
+                totalScans += 1;
+                clearInterval(timerInterval);
+                update();
+                timerInterval = setInterval(update, 50);
+
                 // UI Feedback
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
                 document.getElementById('shareContainer').style.display = 'block';
@@ -40,15 +44,19 @@
     }
 
     async function fetchTotalScans(startTimer = true) {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
+        // Cache buster for initial load
+        const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${Date.now()}`; 
+
+        const res = await fetch(url, {
             headers: { 'apikey': API_KEY }
         });
+        
         const d = await res.json();
         if (d && d.length > 0) {
             totalScans = d[0].value;
             if (startTimer) {
                 update(); 
-                timerInterval = setInterval(update, 50); // Use the global interval holder
+                timerInterval = setInterval(update, 50); 
             }
         } else {
             console.error("Error: 'total_scans' row not found. Clock cannot start.");
@@ -87,14 +95,10 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initialization ---
-    function init() {
-        console.log("Initialization complete. Starting hydrbrew logic...");
-        fetchTotalScans();
-        window.checkForCan();
-    }
+    // --- Initialization: Simplest possible direct call ---
+    console.log("Starting hydrbrew logic...");
+    fetchTotalScans();
+    window.checkForCan();
     
-    // Use the most stable initialization method: direct call.
-    init(); 
 })();
 
