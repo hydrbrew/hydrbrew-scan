@@ -21,7 +21,7 @@
             const d = await res.json();
             if (d?.new_scan) {
                 
-                // FIX: Instant UI Update 
+                // FIX: Instant UI Update (local change)
                 totalScans += 1;
                 clearInterval(timerInterval);
                 update();
