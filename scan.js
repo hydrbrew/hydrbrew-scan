@@ -44,30 +44,34 @@
     }
 
     // --- Core Functions: READ Operation (Initial Count Fetch) ---
-    async function fetchInitialCount() {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_total_scans`, {
-            method: 'POST',
-            headers: {
-                'apikey': API_KEY,
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`, 
-                'Origin': window.location.origin
-            }
-        });
-
-if (res.ok) {
-            const d = await res.json();
-            
-            // CRITICAL FIX: Direct assignment since the function now returns a raw bigint
-            if (typeof d === 'number') {
-                totalScans = d;
-            } else if (d && d.length > 0 && d[0].value) { 
-                // Fallback for array response (if needed)
-                totalScans = parseInt(d[0].value, 10);
-            } else {
-                 console.error("Fetch returned unreadable data:", d);
-            }
+async function fetchInitialCount() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_total_scans`, {
+        method: 'POST',
+        headers: {
+            'apikey': API_KEY,
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`, 
+            'Origin': window.location.origin
         }
+    });
+
+    if (res.ok) {
+        // CRITICAL FIX: Read the response as raw text, since the function returns a raw number
+        const rawText = await res.text();
+        
+        // Trim whitespace and attempt to parse the integer
+        const parsedCount = parseInt(rawText.trim(), 10); 
+        
+        if (!isNaN(parsedCount) && parsedCount > 0) {
+            totalScans = parsedCount;
+        } else {
+            console.error("Could not parse final count:", rawText);
+        }
+        
+    } else {
+        console.error("Failed to fetch initial scan count with status:", res.status);
+    }
+}
     
     // --- Core Functions: WRITE Operation (Scan Registration) ---
     window.registerScan = async function (id) {
