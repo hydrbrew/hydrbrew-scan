@@ -21,7 +21,7 @@
             const d = await res.json();
             if (d?.new_scan) {
                 
-                // FIX: Instant UI Update (Manually increment count and restart clock)
+                // FIX: Instant UI Update 
                 totalScans += 1;
                 clearInterval(timerInterval);
                 update();
@@ -44,7 +44,6 @@
     }
 
     async function fetchTotalScans() {
-        // Cache buster for initial load
         const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${Date.now()}`; 
 
         const res = await fetch(url, {
@@ -97,8 +96,7 @@
 
     // --- Initialization: Direct Call for stability and instant mobile scan ---
     console.log("Starting hydrbrew logic...");
-    fetchTotalScans(); // Starts the clock
+    fetchTotalScans(); // Starts the clock and fetches initial count
     processCanFragment(); // Checks for the URL fragment immediately
-
+    
 })();
-
