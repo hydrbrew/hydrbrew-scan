@@ -9,6 +9,9 @@
     let timerInterval; 
 
     // --- Core Functions (Stable and Tested) ---
+// ... (The rest of the file continues from here) 
+
+    // --- Core Functions (Stable and Tested) ---
 
     window.registerScan = async function(id) {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
