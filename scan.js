@@ -59,70 +59,50 @@
         }
     }
 
-    // --- Core Functions: WRITE Operation (Final Corrected Logic) ---
-    window.registerScan = async function (id) {
-        // 1. Check if scan ID is new via RPC
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
-            method: 'POST',
-            headers: {
-                'apikey': API_KEY,
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`,
-                'Origin': window.location.origin
-            },
-            body: JSON.stringify({ p_can_id: id })
-        });
+   // --- Core Functions: WRITE Operation (Stable Logic) ---
+window.registerScan = async function (id) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
+        method: 'POST',
+        headers: {
+            'apikey': API_KEY,
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`,
+            'Origin': window.location.origin
+        },
+        body: JSON.stringify({ p_can_id: id })
+    });
 
-        if (res.ok) {
-            const d = await res.json();
+    if (res.ok) {
+        const d = await res.json();
+
+        if (d && d.length > 0 && d[0].new_scan === true) {
             
-            // 2. Check the RPC result for new_scan: true
-            if (d && d.length > 0 && d[0].new_scan === true) {
-                
-                // 3. CRITICAL: Directly PATCH the globals table to increment the counter
-                const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans`, {
-                    method: 'PATCH',
-                    headers: {
-                        'apikey': API_KEY,
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`,
-                        // FINAL FIX: This header is guaranteed to force the transaction success
-                        'Prefer': 'return=representation' 
-                    },
-                    body: JSON.stringify({ value: totalScans + 1 })
-                });
-                
-                if (patchRes.ok) {
-                    // 4. Update the local counter and UI
-                    totalScans += 1;
-                    clearInterval(timerInterval);
-                    update();
-                    timerInterval = setInterval(update, 50);
+            // Increment the local counter
+            totalScans += 1;
+            clearInterval(timerInterval);
+            update();
+            timerInterval = setInterval(update, 50);
 
-                    // UI Feedback
-                    document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
-                    document.getElementById('shareContainer').style.display = 'block';
+            // UI Feedback
+            document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
+            document.getElementById('shareContainer').style.display = 'block';
 
-                    const f = document.getElementById('flash');
-                    f.style.transform = 'translate(-50%,-50%) scale(1.5)';
-                    f.style.opacity = 1;
-                    setTimeout(() => {
-                        f.style.transform = 'translate(-50%,-50%) scale(0)';
-                        f.style.opacity = 0;
-                    }, 1500);
-                } else {
-                     console.error("PATCH failed with status:", patchRes.status);
-                     document.getElementById('status').innerHTML = 'Error updating counter.';
-                }
-            } else {
-                document.getElementById('status').innerHTML = 'Scan already counted.';
-            }
+            const f = document.getElementById('flash');
+            f.style.transform = 'translate(-50%,-50%) scale(1.5)';
+            f.style.opacity = 1;
+            setTimeout(() => {
+                f.style.transform = 'translate(-50%,-50%) scale(0)';
+                f.style.opacity = 0;
+            }, 1500);
+
         } else {
-            console.error("Scan registration failed with status:", res.status);
-            document.getElementById('status').innerHTML = 'Error registering scan.';
+            document.getElementById('status').innerHTML = 'Scan already counted.';
         }
+    } else {
+        console.error("Scan registration failed with status:", res.status);
+        document.getElementById('status').innerHTML = 'Error registering scan.';
     }
-
+}
     function checkForCan() {
         canId = window.location.hash.substring(1);
         if (canId.startsWith('can-') && !hasScanned) {
