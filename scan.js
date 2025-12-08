@@ -82,11 +82,11 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initialization (GUARANTEED EXECUTION) ---
-    // The code that runs only when the page's HTML is fully loaded.
-    window.addEventListener('DOMContentLoaded', () => {
-        console.log("DOM fully loaded. Starting hydrbrew scan logic...");
-        fetchTotalScans(); // Get initial count and start the clock
-        window.checkForCan(); // Check for scan fragment
-    });
+    // --- Initialization (GUARANTEED EXECUTION via TIMEOUT) ---
+    // The previous DOMContentLoaded was still failing. This guarantees a delay.
+    setTimeout(() => {
+        console.log("Failsafe activated. Starting hydrbrew scan logic...");
+        fetchTotalScans();
+        window.checkForCan();
+    }, 50); 
 })();
