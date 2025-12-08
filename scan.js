@@ -58,7 +58,6 @@
                 update(); // STARTS the animation loop here
             }
         } else {
-            // Failsafe if the row is deleted
             console.error("Error: 'total_scans' row not found. Clock cannot start.");
         }
     }
