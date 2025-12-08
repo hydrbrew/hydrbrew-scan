@@ -44,6 +44,7 @@
     }
 
     async function fetchTotalScans(startTimer = true) {
+        // Cache buster for initial load
         const url = `${SUPABASE_URL}/rest/v1/globals?key=eq.total_scans&cache=${Date.now()}`; 
 
         const res = await fetch(url, {
@@ -101,6 +102,6 @@
         window.checkForCan();
     }
     
-    // --- GUARANTEED START VIA window.onload ---
-    window.onload = init;
+    // Simplest possible startup call
+    init(); 
 })();
