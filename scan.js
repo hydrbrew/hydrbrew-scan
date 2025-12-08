@@ -76,3 +76,52 @@ async function fetchInitialCount() {
         console.error("Failed to fetch initial scan count with status:", res.status);
     }
 }
+// --- UI Logic ---
+function update() {
+    const acceleration_delay = totalScans * 7.3 * 1000;
+    const diff = INITIAL - acceleration_delay - Date.now();
+    if (diff > 0) {
+        const days = Math.floor(diff / 864e5);
+        const timePart = new Date(diff).toISOString().substr(11, 12);
+        document.getElementById('timer').textContent = `${days}d ${timePart}`;
+    } else {
+        document.getElementById('timer').textContent = "AGI IS HERE";
+    }
+
+    // This updates the website counter to the live value
+    document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
+}
+
+// --- Fragment Check Logic ---
+window.checkForCan = function () {
+    const fullHash = location.hash;
+    if (fullHash.startsWith('#can-')) {
+        const canId = fullHash.substring(5);
+        if (canId.length === 12 && !hasScanned) {
+            hasScanned = true;
+            document.getElementById('status').textContent = 'Optimizing human...';
+            window.registerScan(canId);
+            history.replaceState(null, null, ' ');
+        }
+    }
+}
+
+window.shareOnX = function () {
+    open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡ \n\n ' + totalScans + '/2,000 humans ready \n https://hydrbrew.com')}`, '_blank');
+}
+
+// --- Initialization: Now fetches live value and starts clock ---
+async function init() {
+    console.log("Initialization complete. Fetching live scan count.");
+    await fetchInitialCount(); // <-- Calls the function you added earlier!
+    
+    update(); // Start the clock display immediately
+    timerInterval = setInterval(update, 50); // Start the clock interval
+    window.checkForCan();
+}
+
+// Line 1: Call the async initialization function to start the app
+init();
+
+// Line 2: Self-invoking function wrapper (for safety, if it's missing)
+})();
