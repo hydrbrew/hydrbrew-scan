@@ -8,7 +8,7 @@
     let hasScanned = false; 
     let timerInterval; 
 
-    // --- Core Functions ---
+    // --- Core Functions (Stable and Tested) ---
 
     window.registerScan = async function(id) {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_if_new`, {
@@ -75,7 +75,7 @@
         document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
     }
 
-    // --- Fragment Check Logic ---
+    // --- Fragment Check Logic (Called after clock starts) ---
     window.checkForCan = function() {
         const fullHash = location.hash;
         if (fullHash.startsWith('#can-')) {
@@ -93,12 +93,22 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initialization: Last known stable start sequence ---
-    function init() {
-        console.log("Initialization complete. Starting hydrbrew logic...");
-        fetchTotalScans();
-        window.checkForCan();
-    }
-    
-    init();
+    // --- Initialization: The Ultimate Failsafe Polling Loop ---
+    let initAttempts = 0;
+    const maxAttempts = 200; // Try for 10 seconds (200 * 50ms)
+    const pollingInterval = setInterval(() => {
+        initAttempts++;
+        const timerElement = document.getElementById('timer');
+        
+        // Check if the HTML element is finally available
+        if (timerElement) {
+            clearInterval(pollingInterval); // Stop the failsafe loop
+            console.log("Failsafe activated. Starting hydrbrew logic...");
+            fetchTotalScans();
+            window.checkForCan();
+        } else if (initAttempts >= maxAttempts) {
+            clearInterval(pollingInterval);
+            console.error("Initialization failed: Could not find 'timer' element after 10 seconds.");
+        }
+    }, 50); // Check every 50 milliseconds
 })();
