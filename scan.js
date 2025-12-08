@@ -2,7 +2,7 @@
     // --- Configuration ---
     const INITIAL = new Date('2030-07-11T14:22:00.000Z').getTime();
     const SUPABASE_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
-    const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
+    const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rfaBbc8KM';
 
     let totalScans = 0;
     let hasScanned = false; 
@@ -19,10 +19,9 @@
         if (res.ok) {
             const d = await res.json();
             if (d?.new_scan) {
-                await fetchTotalScans(false); // Update count instantly
+                await fetchTotalScans(false); 
                 document.getElementById('status').innerHTML = '<b>Human optimized for 2045</b>';
                 document.getElementById('shareContainer').style.display = 'block';
-                // Simplified flash animation for robust execution
                 const f = document.getElementById('flash');
                 f.style.transform = 'translate(-50%,-50%) scale(1.5)';
                 f.style.opacity = 1;
@@ -45,9 +44,8 @@
         if (d && d.length > 0) {
             totalScans = d[0].value;
             if (startTimer) {
-                // START THE CLOCK USING SETINTERVAL (MOST RELIABLE)
-                update(); // Initial call
-                setInterval(update, 50); // Updates every 50ms
+                update(); 
+                setInterval(update, 50); 
             }
         } else {
             console.error("Error: 'total_scans' row not found. Clock cannot start.");
@@ -56,7 +54,7 @@
 
     // --- UI Logic ---
 
-    // 1. Timer Update Loop (Uses reliable subtraction logic)
+    // 1. Timer Update Loop
     function update() {
         const acceleration_delay = totalScans * 7.3 * 1000;
         const diff = INITIAL - acceleration_delay - Date.now(); 
@@ -71,7 +69,7 @@
         document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
     }
 
-    // 2. Fragment Check (Runs once to process URL, ensures no repeated logic)
+    // 2. Fragment Check 
     window.checkForCan = function() {
         const fullHash = location.hash;
         if (fullHash.startsWith('#can-')) {
@@ -90,8 +88,11 @@
         open(`https://x.com/intent/post?text=${encodeURIComponent('I just optimized myself for 2045 with Hydrbrew° 🧠⚡\n\n' + totalScans + '/2,000 humans ready\nhttps://hydrbrew.com')}`, '_blank');
     }
 
-    // --- Initial Script Execution ---
-    console.log("Starting hydrbrew scan logic...");
-    fetchTotalScans(); // Get initial count and start the clock
-    window.checkForCan(); // Check for scan fragment immediately after start
+    // --- Initialization (GUARANTEED EXECUTION) ---
+    // The code that runs only when the page's HTML is fully loaded.
+    window.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM fully loaded. Starting hydrbrew scan logic...");
+        fetchTotalScans(); // Get initial count and start the clock
+        window.checkForCan(); // Check for scan fragment
+    });
 })();
