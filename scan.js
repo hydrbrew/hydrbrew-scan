@@ -10,7 +10,7 @@
     let hasScanned = false;
     let timerInterval; 
 
-    // --- UI and Helper Logic (Dependencies for Init) ---
+    // --- UI and Helper Logic (Defined First) ---
     function update() {
         const acceleration_delay = totalScans * 7.3 * 1000;
         const diff = INITIAL - acceleration_delay - Date.now();
@@ -23,7 +23,6 @@
         }
 
         // This updates the website counter to the live value
-        // Note: Assumes HTML has an element with id="scans" (from Carrd setup)
         document.getElementById('scans').textContent = `Scans: ${totalScans.toLocaleString()} / 2,000 (first pallet)`;
     }
 
@@ -59,7 +58,6 @@
         if (res.ok) {
             const d = await res.json();
             
-            // CRITICAL FIX: Robustly read the array response from PostgreSQL
             if (d && d.length > 0) {
                 const rawValue = d[0].get_total_scans; 
                 if (typeof rawValue === 'string') {
@@ -118,10 +116,10 @@
     // --- Initialization (Final Call) ---
     async function init() {
         console.log("Initialization complete. Fetching live scan count.");
-        await fetchInitialCount(); // <-- Call the fetch function
+        await fetchInitialCount(); 
         
-        update(); // Start the clock display immediately
-        timerInterval = setInterval(update, 50); // Start the clock interval
+        update(); 
+        timerInterval = setInterval(update, 50); 
         window.checkForCan();
     }
 
