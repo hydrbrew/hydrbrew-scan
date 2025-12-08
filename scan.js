@@ -55,22 +55,19 @@
             }
         });
 
-        if (res.ok) {
+if (res.ok) {
             const d = await res.json();
             
-            if (d && d.length > 0) {
-                const rawValue = d[0].get_total_scans; 
-                if (typeof rawValue === 'string') {
-                    totalScans = parseInt(rawValue, 10);
-                } else if (typeof rawValue === 'number') {
-                    totalScans = rawValue;
-                }
+            // CRITICAL FIX: Direct assignment since the function now returns a raw bigint
+            if (typeof d === 'number') {
+                totalScans = d;
+            } else if (d && d.length > 0 && d[0].value) { 
+                // Fallback for array response (if needed)
+                totalScans = parseInt(d[0].value, 10);
+            } else {
+                 console.error("Fetch returned unreadable data:", d);
             }
-            
-        } else {
-            console.error("Failed to fetch initial scan count with status:", res.status);
         }
-    }
     
     // --- Core Functions: WRITE Operation (Scan Registration) ---
     window.registerScan = async function (id) {
