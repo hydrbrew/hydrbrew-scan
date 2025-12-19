@@ -1,23 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scanning...</title>
-    <script>
-        const path = window.location.pathname;
-        // Assuming your QR code is structured as https://temporaryhost.com/123456789012
-        const pathSegments = path.split('/').filter(p => p.length > 0);
-        const canId = pathSegments[pathSegments.length - 1]; 
-
-        if (canId && canId.length === 12) {
-            // Redirect to your Carrd site using the fragment
-            window.location.replace(`https://hydrbrew.com/#can-${canId}`);
-        } else {
-            // Fallback for direct access
-            window.location.replace('https://hydrbrew.com/');
-        }
-    </script>
+    <title>Redirecting...</title>
 </head>
 <body>
-    If you are not redirected, please click <a href="https://hydrbrew.com/">here</a>.
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const canId = params.get("can");
+
+      // Note: This checks for a 12-character ID. 
+      // Ensure your QR codes are 12 characters, or adjust the length check below.
+      if (canId && canId.length === 12) {
+        window.location.replace(`https://hydrbrew.com/#can-${canId}`);
+      } else {
+        window.location.replace("https://hydrbrew.com/");
+      }
+    </script>
 </body>
 </html>
