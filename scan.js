@@ -1,7 +1,8 @@
-const SB_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
+(async function() {
+    const SB_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
 
-async function initExperiment() {
+    // 1. Load Supabase Library
     if (!window.supabase) {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
@@ -13,24 +14,31 @@ async function initExperiment() {
     const baseTarget = 1910000520000; 
     let liveScans = 0;
 
-    // 1. Scan Handler
-    if (window.location.hash.includes('#can-')) {
-        const id = window.location.hash.split('#can-')[1];
-        try {
-            await sb.rpc('increment_if_new', { p_can_id: id });
-            window.location.hash = '';
-            setTimeout(() => location.reload(), 800);
-        } catch (e) { console.error(e); }
-    }
-
-    // 2. Ticker & Sync
-    const updateDisplay = async () => {
-        const { data } = await sb.from('globals').select('value').eq('key', 'total_scans').single();
-        if (data) liveScans = parseInt(data.value);
-        const scanEl = document.getElementById('scans') || document.getElementById('scan-count');
-        if (scanEl) scanEl.innerText = `Scans: ${liveScans} / 2,000 (first pallet)`;
+    // 2. Scan Logic
+    const handleScan = async () => {
+        if (window.location.hash.includes('#can-')) {
+            const id = window.location.hash.split('#can-')[1];
+            try {
+                await sb.rpc('increment_if_new', { p_can_id: id });
+                window.location.hash = '';
+                setTimeout(() => location.reload(), 500);
+            } catch (err) {
+                console.error("Scan Error:", err);
+            }
+        }
     };
 
+    // 3. Display Logic
+    const sync = async () => {
+        const { data } = await sb.from('globals').select('value').eq('key', 'total_scans').single();
+        if (data) {
+            liveScans = parseInt(data.value);
+            const el = document.getElementById('scans') || document.getElementById('scan-count');
+            if (el) el.innerText = `Scans: ${liveScans} / 2,000 (first pallet)`;
+        }
+    };
+
+    // 4. Timer Logic
     setInterval(() => {
         const acceleration = liveScans * 86400000;
         const diff = (baseTarget - acceleration) - Date.now();
@@ -45,7 +53,7 @@ async function initExperiment() {
         }
     }, 41);
 
-    await updateDisplay();
-    setInterval(updateDisplay, 5000);
-}
-initExperiment();
+    await handleScan();
+    await sync();
+    setInterval(sync, 5000);
+})();
