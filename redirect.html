@@ -5,16 +5,15 @@
 </head>
 <body>
     <script>
-      const params = new URLSearchParams(window.location.search);
-      const canId = params.get("can");
+        const params = new URLSearchParams(window.location.search);
+        const canId = params.get("can");
 
-      // Note: This checks for a 12-character ID. 
-      // Ensure your QR codes are 12 characters, or adjust the length check below.
-      if (canId && canId.length === 12) {
-        window.location.replace(`https://hydrbrew.com/#can-${canId}`);
-      } else {
-        window.location.replace("https://hydrbrew.com/");
-      }
+        // FIX: Removed the "12 character" restriction
+        if (canId) {
+            window.location.replace(`https://hydrbrew.com/#can-${canId}`);
+        } else {
+            window.location.replace("https://hydrbrew.com/");
+        }
     </script>
 </body>
 </html>
