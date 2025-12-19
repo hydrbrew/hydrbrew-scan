@@ -12,10 +12,10 @@ async function initExperiment() {
 
     const sb = window.supabase.createClient(SB_URL, SB_KEY);
     const baseTarget = 1910000520000; 
-    let liveScans = 0;
+    let liveScans = 0; // Force start at 0 to match your DB
 
-    // 2. High-Precision Ticker (Runs immediately)
-    setInterval(() => {
+    // 2. High-Precision Ticker
+    function updateTicker() {
         const acceleration = liveScans * 86400000;
         const diff = (baseTarget - acceleration) - Date.now();
         const el = document.getElementById('timer');
@@ -28,12 +28,13 @@ async function initExperiment() {
             const ms = Math.floor(diff % 1000);
             el.innerHTML = `${String(d).padStart(4,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(ms).padStart(3,'0')}`;
         }
-    }, 41);
+    }
+    setInterval(updateTicker, 41);
 
-    // 3. Force Sync with Database (Wipes the "4")
+    // 3. Force Sync with Supabase
     async function syncData() {
-        const { data } = await sb.from('globals').select('value').eq('key', 'total_scans').single();
-        if (data) {
+        const { data, error } = await sb.from('globals').select('value').eq('key', 'total_scans').single();
+        if (data && !error) {
             liveScans = parseInt(data.value);
             const scanEl = document.getElementById('scan-count');
             if (scanEl) scanEl.innerText = liveScans;
@@ -41,15 +42,7 @@ async function initExperiment() {
     }
     
     await syncData();
-    setInterval(syncData, 5000); // Check for new scans every 5 seconds
-
-    // 4. Handle QR Scans
-    if (window.location.hash.includes('#can-')) {
-        const id = window.location.hash.split('#can-')[1];
-        await sb.rpc('increment_if_new', { p_can_id: id });
-        window.location.hash = '';
-        setTimeout(() => location.reload(), 1000);
-    }
+    setInterval(syncData, 5000); // Re-sync every 5 seconds
 }
 
 initExperiment();
