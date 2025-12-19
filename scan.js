@@ -2,7 +2,7 @@ const SB_URL = 'https://pqcouyhedjiatfrjjbli.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY291eWhlZGppYXRmcmpqYmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2OTUwNDgsImV4cCI6MjA4MDI3MTA0OH0.AjIcx088jU932heptPbi-HDSTvhAcIui5rUfaBbc8KM';
 
 async function initExperiment() {
-    // 1. Load Supabase Library
+    // 1. Load Supabase
     if (!window.supabase) {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
@@ -12,10 +12,10 @@ async function initExperiment() {
 
     const sb = window.supabase.createClient(SB_URL, SB_KEY);
     const baseTarget = 1910000520000; 
-    let liveScans = 0; // Force start at 0 to match your DB
+    let liveScans = 0;
 
     // 2. High-Precision Ticker
-    function updateTicker() {
+    setInterval(() => {
         const acceleration = liveScans * 86400000;
         const diff = (baseTarget - acceleration) - Date.now();
         const el = document.getElementById('timer');
@@ -28,21 +28,31 @@ async function initExperiment() {
             const ms = Math.floor(diff % 1000);
             el.innerHTML = `${String(d).padStart(4,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(ms).padStart(3,'0')}`;
         }
-    }
-    setInterval(updateTicker, 41);
+    }, 41);
 
-    // 3. Force Sync with Supabase
+    // 3. Sync the "99" (The Bridge)
     async function syncData() {
         const { data, error } = await sb.from('globals').select('value').eq('key', 'total_scans').single();
         if (data && !error) {
             liveScans = parseInt(data.value);
-            const scanEl = document.getElementById('scan-count');
-            if (scanEl) scanEl.innerText = liveScans;
+            // This specifically targets the element you just renamed in Carrd
+            const scanEl = document.getElementById('scans');
+            if (scanEl) {
+                scanEl.innerText = `Scans: ${liveScans} / 2,000 (first pallet)`;
+            }
         }
     }
     
     await syncData();
-    setInterval(syncData, 5000); // Re-sync every 5 seconds
+    setInterval(syncData, 5000);
+
+    // 4. Handle QR Scans
+    if (window.location.hash.includes('#can-')) {
+        const id = window.location.hash.split('#can-')[1];
+        await sb.rpc('increment_if_new', { p_can_id: id });
+        window.location.hash = '';
+        setTimeout(() => location.reload(), 1200);
+    }
 }
 
 initExperiment();
