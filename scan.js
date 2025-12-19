@@ -8,46 +8,43 @@ async function initExperiment() {
 
     script.onload = async () => {
         const sb = window.supabase.createClient(SB_URL, SB_KEY);
-        const target = 1910000520000; 
+        const baseTarget = 1910000520000; 
+        let currentScans = 0; // Start at zero to match your DB
 
-        const hash = window.location.hash;
-        if (hash.includes('#can-')) {
-            const canId = hash.split('#can-')[1];
-            
-            // Trigger the updated SQL function
-            const { data, error } = await sb.rpc('increment_if_new', { p_can_id: canId });
-
-            // If it's a new scan, show the success message
-            if (data && data.length > 0) {
-                document.getElementById('protocol-msg').innerHTML = "<span style='color:#fff; font-weight:bold;'>+1 OPTIMIZED HUMAN REGISTERED</span>";
-                setTimeout(() => location.reload(), 1500);
+        // 1. Immediate DB Fetch (Force Sync)
+        const fetchRealCount = async () => {
+            const { data, error } = await sb.from('globals').select('value').eq('key', 'total_scans').single();
+            if (data && !error) {
+                currentScans = parseInt(data.value);
+                const scanEl = document.getElementById('scan-count');
+                if (scanEl) scanEl.innerText = `${currentScans} / 2,000`;
             }
-            window.location.hash = '';
-        }
+        };
+        await fetchRealCount();
 
-        setInterval(async () => {
-            const { data } = await sb.from('globals').select('value').eq('key', 'total_scans').single();
-            const count = data ? data.value : 0;
+        // 2. High-Precision Ticker
+        setInterval(() => {
+            const acceleration = currentScans * 86400000;
+            const diff = (baseTarget - acceleration) - Date.now();
             
-            const scanEl = document.getElementById('scan-count');
-            if (scanEl) scanEl.innerText = count;
-
-            const diff = (target - (count * 86400000)) - Date.now();
-            if (diff > 0) {
+            const el = document.getElementById('timer');
+            if (el && diff > 0) {
                 const d = Math.floor(diff / 86400000);
                 const h = Math.floor((diff % 86400000) / 3600000);
                 const m = Math.floor((diff % 3600000) / 60000);
                 const s = Math.floor((diff % 60000) / 1000);
                 const ms = Math.floor(diff % 1000);
-                
-                const timerEl = document.getElementById('timer');
-                if (timerEl) {
-                    timerEl.innerHTML = `${String(d).padStart(4,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(ms).padStart(3,'0')}`;
-                }
+                el.innerHTML = `${String(d).padStart(4,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(ms).padStart(3,'0')}`;
             }
         }, 41);
+
+        // 3. Handle New Scans
+        if (window.location.hash.includes('#can-')) {
+            const id = window.location.hash.split('#can-')[1];
+            await sb.rpc('increment_if_new', { p_can_id: id });
+            window.location.hash = '';
+            setTimeout(() => location.reload(), 1000);
+        }
     };
 }
 initExperiment();
-
-})();
